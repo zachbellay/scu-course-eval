@@ -4,3 +4,6 @@
 config.yml
 /text
 debug.log
+/json
+/pdfs
+/txts
