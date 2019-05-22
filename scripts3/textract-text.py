@@ -15,15 +15,15 @@ for subdir, dirs, files in os.walk(pdf_dir):
         txt_file = file.replace('.pdf', '.txt')
         txt_path = os.path.join(txt_folder, txt_file)
 
-	try:
-		os.makedirs(txt_folder)
-	except OSError as e:
-	    if e.errno != errno.EEXIST:
-	        print 'Directory already exists.'
+        try:
+            os.makedirs(txt_folder)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                print('Directory already exists.')
 
         text = textract.process(pdf_path)
         text_output_file = open(txt_path, 'wb')
         text_output_file.write(text)
         text_output_file.close()
 
-        print txt_path
+        print(txt_path)
