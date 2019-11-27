@@ -1,20 +1,27 @@
 import urllib.request
 import requests
 import os
-import progressbar
+
 
 def download_range(quarter, year, id, low, high, cookie):
 
 	# Progress bar for nice CLI UI
-	bar = progressbar.ProgressBar(redirect_stdout=True)
+	# bar = progressbar.ProgressBar(redirect_stdout=True)
 
 	# Create new directory to download PDFs in
-	pdf_dir = 'C:\\Users\\Zach\\Documents\\GitHub\\scu-course-eval\\pdfs'
-	download_dir = pdf_dir + '\\' + str(quarter) + '_' + str(year) + '\\'
+	# pdf_dir = 'C:\\Users\\Zach\\Documents\\GitHub\\scu-course-eval\\pdfs'
+	
+	rel_pdf_dir = '../pdfs'
+	cd = os.getcwd()
+	pdf_dir = os.path.abspath(os.path.join(cd, rel_pdf_dir))
+
+	# download_dir = pdf_dir + '\\' + str(quarter) + '_' + str(year) + '\\'
+	download_dir = os.path.join(pdf_dir, str(quarter) + '_' + str(year))
+
 	os.makedirs(download_dir, exist_ok=True)
 
 	# Iterate from low to high and download all eval PDFs
-	for i in bar(range(int(low), int(high)+1)):
+	for i in range(int(low), int(high)+1):
 		try:
 			# Construct URL path to PDF and read response
 			url = 'https://evaluations.scu.edu/?vclass=' + str(i) + '&vtrm=' + str(id)
@@ -38,6 +45,3 @@ def download_range(quarter, year, id, low, high, cookie):
 			exit()
 		except:
 			print('Error')
-
-		# Update the progress bar and shift the iterator to start at zero
-		bar.update(i - int(low))

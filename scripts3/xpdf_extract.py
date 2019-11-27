@@ -1,11 +1,15 @@
-import re
-from tika import parser
-raw = parser.from_file('../pdfs/Winter_2017/46003.pdf')
-parsed_pdf = raw['content']
+import os
+import subprocess
 
-print(len(parsed_pdf))
+# Get current directory
+cd = os.getcwd()
 
-matches = re.findall(r'/n=([0-9.]+).*av\.=([0-9.]+).*md=([0-9.]+).*dev\.=([0-9.]+)/g', parsed_pdf)
+# Relative filepaths
+pdf_loc = '../pdfs/Winter_2017/46003.pdf'
+txt_loc = 'test2.txt'
 
-for match in matches:
-    print(match)
+# Full filepaths
+full_pdf_loc = os.path.join(cd, pdf_loc)
+full_txt_loc = os.path.join(cd, txt_loc)
+
+subprocess.call(['pdftotext', full_pdf_loc, full_txt_loc])
