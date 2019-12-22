@@ -4,7 +4,7 @@ import linecache
 from tqdm import tqdm
 import sys
 import itertools
-
+import csv
 
 subjects = ['ACTG', 'AERO', 'AMTH', 'ANTH', 'ARAB', 'ARTH', 'ARTS', 'ASCI', 'BIOE', 'BIOL', 'BS', 'BSHS', 'BSPT', 'BSST', 'BUSN', 'CATE', 'CE', 'CEFT', 'CEHS', 'CENG', 'CEPS', 'CERS', 'CEST', 'CHEM', 'CHIN', 'CHST', 'CLAS', 'COEN', 'COMM', 'CPSY', 'CSCI', 'DANC', 'DM', 'DMPS', 'DMRS', 'DMSP', 'DR', 'ECON', 'ED', 'EDUC', 'ELEN', 'ELSJ', 'EMBA', 'EMGT', 'ENGL', 'ENGR', 'ENVS', 'ETHN', 'FE', 'FERS', 'FNCE', 'FREN', 'FT', 'FTCE', 'FTLS', 'FTRS', 'FTST', 'GERM', 'GTUC', 'HIST', 'HM', 'HMLS', 'HNRS', 'HR', 'HRBS', 'HRCE', 'HRFT', 'HRHS', 'HRIR', 'HRPH', 'HRPS', 'HRRA', 'HRRS', 'HRSP', 'HRST', 'HS', 'HSFT', 'HSHR', 'HSRA', 'HSRS', 'HSSP', 'HSST', 'IDIS', 'IDS', 'INTL', 'ITAL', 'JAPN', 'LANG', 'LAW', 'LEAD', 'LS', 'LSFT', 'LSHM', 'LSHS', 'LSRA', 'LSST', 'MA', 'MATH', 'MDV', 'MECH', 'MGMT', 'MILS', 'MKTG', 'MLS', 'MSIS', 'MTS', 'MUSC', 'NEUR', 'NOV', 'NT', 'NTBS', 'NTHM', 'OMIS', 'OT', 'OTRS', 'OTSP', 'PH', 'PHCE', 'PHHS', 'PHIL', 'PHRA', 'PHSC', 'PHST', 'PHYS', 'PLIT', 'PMIN', 'POLI', 'PS', 'PSRS', 'PSYC', 'PTBS', 'RA', 'RAFT', 'RAHR', 'RAHS', 'RALS', 'RAST', 'RELS', 'RJUS', 'RS', 'RSCE', 'RSED', 'RSFT', 'RSHR', 'RSOC', 'RSRA', 'RSSP', 'RSST', 'SCTR', 'SOCI', 'SP', 'SPAN', 'SPBS', 'SPFT', 'SPIR', 'SPLS', 'SPNT', 'SPPS', 'SPRA', 'SPRS', 'SPST', 'SRC', 'ST', 'STCE', 'STD', 'STED', 'STHR', 'STHS', 'STL', 'STLS', 'STPH', 'STPS', 'STRS', 'STSP', 'TESP', 'THTR', 'UCB', 'UGST', 'UNIV', 'WGST']
 
@@ -14,28 +14,40 @@ def parse():
     cd = os.getcwd()
     txt_dir = os.path.abspath(os.path.join(cd, rel_txt_dir))
 
-    # Iterate over all txt files
-    for subdir, dirs, files in os.walk(txt_dir):
-        
-        # Iterate over every txt file
-        for file in files:
+    if(os.path.exists('course_evals.csv')):
+        os.remove('course_evals.csv')
+    
 
-            # # Ignore non-txt files
-            if(".txt" not in file):
-                continue
+    with open('course_evals.csv', mode='w') as eval_file:
 
-            quarter, year = subdir.split('/')[-1].split('_')
+        field_names = ['year', 'quarter', 'course_id', 'instructor_name', 'subject', 'subject_number', 'response_rate', 'num_enrolled', 'num_responses', 'class_name', 'overall_avg', 'overall_std_dev', 'difficulty_avg', 'difficulty_med', 'difficulty_std_dev', 'zero_one', 'two_three', 'four_five', 'six_seven', 'eight_ten', 'eleven_fourteen', 'fifteen_plus']
+        eval_writer = csv.DictWriter(eval_file, fieldnames=field_names)
+        eval_writer.writeheader()
 
-            # Ignore everything before this year
-            if(int(year) < 2015):
-                continue
+        # Iterate over all txt files
+        for subdir, dirs, files in os.walk(txt_dir):
+            
+            # Iterate over every txt file
+            for file in files:
 
-            abs_txt_path = os.path.join(txt_dir, subdir, file)
+                # # Ignore non-txt files
+                if(".txt" not in file):
+                    continue
 
-            _file = parse_file(abs_txt_path, quarter, year)
-            print(_file)
+                quarter, year = subdir.split('/')[-1].split('_')
 
+                # Ignore everything before this year
+                if(int(year) < 2015):
+                    continue
 
+                abs_txt_path = os.path.join(txt_dir, subdir, file)
+
+                _file = parse_file(abs_txt_path, quarter, year)
+
+                if(_file is not None):
+                    eval_writer.writerow(_file)
+                else:
+                    print(quarter, year, file)
 
 def parse_file(file, quarter, year):
 
@@ -51,10 +63,10 @@ def parse_file(file, quarter, year):
         
         eval_info['instructor_name'] = get_instructor_name(file)
 
-        subject, number = get_subject(file)
+        subject, subject_number = get_subject(file)
         
         eval_info['subject'] = subject
-        eval_info['number'] = number
+        eval_info['subject_number'] = subject_number
 
         eval_info['response_rate'] = get_response_rate(file)
 
@@ -82,8 +94,8 @@ def parse_file(file, quarter, year):
         eval_info['four_five'] = four_five
         eval_info['six_seven'] = six_seven
         eval_info['eight_ten'] = eight_ten
-        eval_info['eleven_fourteen'] =eleven_fourteen
-        eval_info['fifteen_plus'] =fifteen_plus
+        eval_info['eleven_fourteen'] = eleven_fourteen
+        eval_info['fifteen_plus'] = fifteen_plus
 
         return eval_info
     
