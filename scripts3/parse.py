@@ -1,10 +1,8 @@
-import re
-import os
-import linecache
-from tqdm import tqdm
-import sys
-import itertools
 import csv
+import itertools
+import linecache
+import os
+import re
 
 subjects = [
     "ACTG",
@@ -312,14 +310,31 @@ def parse_file(file, quarter, year):
         return eval_info
 
 
+def capitalize_name(name):
+
+  parts = re.split(r'(-)', name)
+
+  for i in range(len(parts)):
+    part = parts[i]
+    if '(' in part:
+      # Handle name in parentheses
+      name, nickname = part.split('(')
+      nickname = nickname.capitalize()
+      parts[i] = name + '(' + nickname  
+    elif i % 2 == 0:
+      # Capitalize even parts  
+      parts[i] = part.capitalize()
+
+  return ''.join(parts)
+
 def get_instructor_name(file):
     _id_string = "No. of students enrolled"
 
     # Get the third line by default
     instructor_name = linecache.getline(file, 3).replace("\n", "")
 
-    # If the id_string or left paren is in the name, then get the first line
-    if _id_string in instructor_name or "(" in instructor_name:
+    # If the id_string or pattern (CODE) SEASON - YEAR, then get the first line
+    if _id_string in instructor_name or ('(' in instructor_name and re.search(r'\(.+\) \w+ - \d+', instructor_name)):
         instructor_name = linecache.getline(file, 1).replace("\n", "")
 
     # If there is a comma, get the first part of the split string
@@ -327,9 +342,8 @@ def get_instructor_name(file):
         instructor_name = instructor_name.split(",")[0]
 
     instructor_name = instructor_name.split()
-    instructor_name = [word.capitalize() for word in instructor_name]
+    instructor_name = [capitalize_name(word) for word in instructor_name]
     instructor_name = " ".join(instructor_name)
-    return instructor_name
 
     return instructor_name
 
@@ -342,7 +356,7 @@ def get_subject(file):
         header = [next(f) for i in range(5)]
     header = "".join(header)
 
-    subjects = re.findall(pattern, header)
+    subjects = list(set(re.findall(pattern, header)))
 
     if len(subjects) != 1:
         raise Exception(f"More than one subject candidate found {subjects}")
@@ -391,6 +405,7 @@ def get_num_responses(file):
 
 def get_class_name(file):
     pattern = r"\n(.*?)\("
+    # re.search(r'\(.+\) \w+ - \d+', instructor_name)
 
     with open(file) as f:
         header = [next(f) for i in range(10)]
@@ -429,6 +444,20 @@ def eval_valid(file):
         return False
     else:
         return True
+
+def _get_class_name_from_line(line):
+    pattern = r"^(.*?)\s*\("
+    match = re.search(pattern, line)
+    if match:
+        return match.group(1).strip()
+    return None
+
+def get_class_name(file):
+    with open(file) as f:
+        for line in f:
+            if re.search(r"\b[A-Za-z]+\s+-\s+\d{4}\b", line):
+                return _get_class_name_from_line(line)
+    return None
 
 
 def get_difficulty(file):
