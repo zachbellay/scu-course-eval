@@ -7,4 +7,8 @@ debug.log
 /json
 /pdfs
 /txts
+.python-version
+.env
+/js_scripts/node_modules
+pdf_links.txt
 .DS_Store
